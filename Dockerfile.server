@@ -54,15 +54,16 @@ RUN dpkg -i maip-app/src/server/mmt-packages/mmt-dpi*.deb && \
     dpkg -i maip-app/src/server/mmt-packages/mmt-probe*.deb 2>/dev/null||true && \
     ldconfig
 
-WORKDIR ./maip-app/
-
 # Set the LD_PRELOAD environment variable to preload libgomp
 ENV LD_PRELOAD=/lib/aarch64-linux-gnu/libgomp.so.1
 ENV DOCKER_ENV=true
 
 # Install Python dependencies
-RUN pip3 install -r src/server/deep-learning/requirements.txt
+RUN pip3 install -r maip-app/src/server/deep-learning/requirements.txt
+
 EXPOSE 31057
+
+WORKDIR ./maip-app/
 
 # Command to run the application
 CMD ["./start-maip.sh"]
