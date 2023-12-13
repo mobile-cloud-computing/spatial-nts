@@ -1,0 +1,7 @@
+# Ignore node_modules
+node_modules
+
+.idea
+README.md
+LICENSE
+.npmrc

@@ -1,71 +1,36 @@
 FROM ubuntu:20.04
-
-# Set non-interactive frontend to avoid interactive prompts during build
+# Set non-interactive frontend
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install essential packages
+# Install essential packages in one layer
 RUN apt-get update -y && \
-    apt-get install -y git wget cmake gcc g++ cpp curl software-properties-common
+    apt-get install -y git wget cmake gcc g++ cpp curl software-properties-common graphviz libconfuse-dev libpcap-dev libxml2-dev net-tools && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get install -y python3.8 python3.8-venv && \
+    curl -sL https://deb.nodesource.com/setup_19.x | bash && \
+    apt-get install -y nodejs && \
+    npm install pm2 -g && \
+    rm -rf /var/lib/apt/lists/*
 
-# INSTALL DEEP LEARNING MODULE
-# Install Python 3.8
-RUN add-apt-repository ppa:deadsnakes/ppa -y && \
-    apt-get update -y && \
-    apt-get install -y python3.8 python3.8-venv
-
-# Check Python version
-RUN python3.8 --version
-
-# Install specific pip version
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python3.8 get-pip.py pip==20.0.2
-
-# Check pip version
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+RUN python3.8 get-pip.py pip==20.0.2
 RUN pip3 --version
 
-# Install Graphviz
-RUN apt-get install -y graphviz
-
-# INSTALL NODEJS SERVER
-RUN curl -sL https://deb.nodesource.com/setup_19.x | bash && \
-    apt-get install -y nodejs && \
-    npm install pm2 -g
-
-# INSTALL MMT
-RUN apt-get update -y && \
-    apt-get install -y libconfuse-dev libpcap-dev libxml2-dev net-tools && \
-    ldconfig
-
-# Create app directory and copy the source code
+# Install Python and Node.js dependencies
 COPY . ./maip-app
 
-# Upgrade pip to the latest version
-RUN python3.8 -m pip install --upgrade pip
+RUN python3.8 -m pip install --upgrade pip && \
+    python3.8 -m pip install -r maip-app/src/server/deep-learning/requirements.txt && \
+    cd maip-app/ && npm install
 
-# Install npm packages
-RUN cd maip-app/ && npm install
-
-# Copy example environment file to .env
-RUN cp maip-app/env.example maip-app/.env
-
-# Install MMT packages
+# Copy resources and install MMT packages
 RUN dpkg -i maip-app/src/server/mmt-packages/mmt-dpi*.deb && \
     dpkg -i maip-app/src/server/mmt-packages/mmt-security*.deb && \
-    dpkg -i maip-app/src/server/mmt-packages/mmt-probe*.deb 2>/dev/null||true && \
+    dpkg -i maip-app/src/server/mmt-packages/mmt-probe*.deb 2>/dev/null || true && \
     ldconfig
 
-# Set the working directory
 WORKDIR ./maip-app/
 
-# Set the LD_PRELOAD environment variable to preload libgomp
-ENV LD_PRELOAD=/lib/aarch64-linux-gnu/libgomp.so.1
 ENV DOCKER_ENV=true
-
-# Install Python dependencies
-RUN pip3 install -r src/server/deep-learning/requirements.txt
-
-# Expose the application's port
 EXPOSE 31057
-
-# Command to run the application
 CMD ["./start-maip.sh"]

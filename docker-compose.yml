@@ -2,6 +2,8 @@ version: "3.7"
 services:
   server:
     image: maip-server
+    labels:
+      server.version: "1.0"
     build:
       context: .
       dockerfile: Dockerfile.server
@@ -9,3 +11,7 @@ services:
       - "31057:31057"
     volumes:
       - .:/app
+    environment:
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=31057
+      - MODE=API
