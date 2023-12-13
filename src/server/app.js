@@ -50,7 +50,7 @@ app.use(cookieParser());
 // Set up CORS
 //app.use(cors());
 app.use(cors({
-  origin: 'http://localhost:3000', // replace with your client origin
+  origin: 'http://0.0.0.0:3000', // replace with your client origin
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
 }));
 // Add headers
