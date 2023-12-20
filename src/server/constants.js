@@ -21,6 +21,10 @@ const AC_TRAINING_PATH = `${AC_PATH}trainings/`;
 
 const OUTPUT_DIRS = [TRAINING_PATH, PREDICTION_PATH, XAI_PATH, ATTACKS_PATH];
 
+const AD_OUTPUT_LABELS = ["Normal traffic", "Malware traffic"];
+const AD_OUTPUT_LABELS_SHORT = ["Normal", "Malware"];
+const AD_OUTPUT_LABELS_XAI = ["", "Malware"];
+const AC_OUTPUT_LABELS = ["Web", "Interactive", "Video"];
 module.exports = {
   PYTHON_CMD,
   AC_PATH, AC_TRAINING_PATH,
@@ -39,4 +43,8 @@ module.exports = {
   DATASETS_PATH,
   PCAP_EXTENSIONS,
   OUTPUT_DIRS,
+  AD_OUTPUT_LABELS,
+  AD_OUTPUT_LABELS_SHORT,
+  AD_OUTPUT_LABELS_XAI,
+  AC_OUTPUT_LABELS
 };
