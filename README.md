@@ -1,20 +1,96 @@
-# maip
-Montimage AI Platform (MAIP) provides users with easy access to AI services developed by Montimage, through a friendly and intuitive interface for interacting with the APIs. It provides a range of ML services, including extract features, build or retrain the model, inject adversarial attacks, produce explanations and evaluate our model using different metrics. Each of these services is exposed through dedicated **APIs** that can be accessed through the server, making it easy to integrate with other applications and systems.
-
-![Architecture of our framework](MAIP_architecture.png)
-
-The above figure shows the architecture of our MAIP framework, that includes the following main components:
-- **Data acquisition** module collects raw traffic data from networks or IoT testbed in either online or offline mode. It can also use Cyber Threat Intelligence (CTI) sources, e.g., deployed honeypots, to learn and continuously train our model using attack patterns and past malware information in the database.
-- **Data analysis \& processing** module employs our [Montimage monitoring tool (MMT)](https://github.com/Montimage/mmt-probe) to parse a wide range of network protocols (e.g., TCP, UDP, HTTP, and more than 700) and extract flow-based features. Then, the restructured and computed data is transformed into a numeric vector so that can be easily processed by our AI model.
-- **AI models** module is responsible for creating and utilizing ML models able to classify the vectorized form of network traffic data for different purposes, such as user activity classification, malware detection in encrypted traffic or root cause analysis.
-- **Adversarial attacks** module injects various evasion and poisoning adversarial attacks for robustness analysis of our system.
-- **Explainable AI** module aim at producing post-hoc global and local explanations of predictions of our model.
-- **Metrics** module allows to measure quantifiable metrics for its accountability and resilience.
-- **Defense mechanisms** module provides countermeasures to prevent attacks against both AI and XAI models.
-
-Overall our framework is designed with a server written in ExpressJS, that employs the MMT tool written in C for feature extraction and leverages popular Python libraries for DL and XAI. The client is built in React and accessible via Swagger APIs, offering users an intuitive and user-friendly interface to interact with the DL services.
-
-Under construction documentation is available here: https://strongcourages-organization.gitbook.io/maip-documentation/
-
-Video demo: https://drive.google.com/file/d/1R2_FHzx1cvv7DMvlbexSeBz_AcxsHrQi/view?usp=sharing
 # spatial-backend
+
+This is the Backend for spatial
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- NPM or Yarn package manager
+- Docker installed if you wish to containerize the application
+
+## Installation
+
+Clone the repository to your local machine:
+
+```bash
+git clone https://github.com/toluelemson/spatial-backend
+```
+
+Change directory to the cloned repository:
+
+```bash
+cd spartial-backend
+```
+
+Checkout the feature branch:
+
+```bash
+git checkout authentication
+```
+
+Install the necessary dependencies:
+
+```bash
+npm install
+```
+
+or if you're using Yarn:
+
+```bash
+yarn install
+```
+
+## Configuration
+
+Before running Spatial, you need to set up the following environment variables. Create a `.env` file in the root directory
+R
+```env
+SERVER_HOST=0.0.0.0
+SERVER_PORT=31057
+MODE=API
+```
+
+## Running the Application Locally
+
+Start the development server:
+
+```bash
+npm start
+```
+
+or with Yarn:
+
+```bash
+yarn start
+```
+
+## Docker Support
+
+### Building the Docker Image
+
+To build a Docker image of Spatial, run:
+
+```bash
+sudo docker-compose build .
+```
+
+### Running the Docker Container
+
+To run Spatial Frontend as a Docker container:
+
+```bash
+sudo docker compose up
+```
+
+Spatial backend will now be accessible at `http://localhost:31057/`.
+
+
+## Contributing
+
+We welcome contributions to this project. Please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature (`git checkout -b feature/Feature`).
+3. Make changes and commit them (`git commit -m 'Add some Feature'`).
+4. Push to the branch (`git push origin feature/Feature`).
+5. Open a Pull Request.# spatial-backend
