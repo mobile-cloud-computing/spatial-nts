@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 import xgboost as xgb
@@ -69,33 +69,49 @@ def split_datasets(modelId, buildConfigFilePath):
 
   return X_train, X_test, y_train_orig, y_test_orig
 
-def preprocess_datasets(X_train, X_test, y_train_orig, y_test_orig):
-  # Convert the expected output into arrays, e.g., 1 -> [1,0,0], 2 -> [0,1,0], 3 -> [0,0,1]
-  output_train = []
-  output_test = []
-  prep_outputs = [[1,0,0], [0,1,0], [0,0,1]]
+def preprocess_datasets(X_train, X_test, y_train_orig, y_test_orig, target_column='output'):
+  # Convert the expected output into one-hot encoded arrays
 
-  for i, row in y_train_orig.iterrows():
-      output_train.append(prep_outputs[row["output"] - 1])
+  num_classes = y_train_orig['output'].nunique()
+  prep_outputs = np.eye(num_classes)
 
-  for i, row in y_test_orig.iterrows():
-      output_test.append(prep_outputs[row["output"] - 1])
-
-  #print(output_train)
-  #print(output_test)
+  output_train = y_train_orig['output'].apply(lambda x: prep_outputs[x - 1]).tolist()
+  output_test = y_test_orig['output'].apply(lambda x: prep_outputs[x - 1]).tolist()
 
   # Preprocessing the data
   scaler = StandardScaler()
   scaler.fit(X_train)
 
-  # Apply transform to both the training/testing dataset.
-  X_train = scaler.transform(X_train)
-  y_train = np.array(output_train)
+  # Apply transform to both the training and testing dataset.
+  X_train_scaled = scaler.transform(X_train)
+  X_test_scaled = scaler.transform(X_test)
 
-  X_test = scaler.transform(X_test)
+  y_train = np.array(output_train)
   y_test = np.array(output_test)
 
-  return X_train, y_train, X_test, y_test
+  return X_train_scaled, y_train, X_test_scaled, y_test
+
+# def preprocess_datasets(X_train, X_test, y_train_orig, y_test_orig, target_column='output'):
+#   # Dynamically determine the target column if not provided
+#   if target_column is None:
+#     target_column = [col for col in y_train_orig.columns if col not in X_train.columns]
+#     if len(target_column) != 1:
+#       raise ValueError("Unable to identify a unique target column. Please specify the target column name.")
+#     target_column = target_column[0]
+#
+#   # Automated One-Hot Encoding of the target variable
+#   encoder = OneHotEncoder(sparse=False)
+#   y_train_encoded = encoder.fit_transform(y_train_orig[[target_column]])
+#   y_test_encoded = encoder.transform(y_test_orig[[target_column]])
+#
+#   # Preprocessing the feature sets
+#   scaler = StandardScaler()
+#   scaler.fit(X_train)  # Fit only on training data
+#   X_train_scaled = scaler.transform(X_train)
+#   X_test_scaled = scaler.transform(X_test)
+#
+#   return X_train_scaled, X_test_scaled, y_train_encoded, y_test_encoded
+
 
 def build_neural_network(X_train, y_train, X_test, y_test, resultPath):
   # Define the Keras model
@@ -199,7 +215,7 @@ def build_lightgbm(X_train, y_train, X_test, y_test, resultPath):
 
   y_pred = lgbm_model.predict(X_test)
   y_pred_proba = lgbm_model.predict_proba(X_test)  # Get predicted probabilities
-  #y_pred = (y_pred > 0.5) 
+  #y_pred = (y_pred > 0.5)
 
   r_2_score = metrics.r2_score(y_test_orig, y_pred)
   mean_squared_log_error_score = metrics.mean_squared_log_error(y_test_orig, y_pred)
@@ -229,11 +245,10 @@ def build_lightgbm(X_train, y_train, X_test, y_test, resultPath):
   saveConfMatrix(y_true=y_test_labels, y_pred=y_pred,
                   filepath_csv=f'{resultPath}/confusion_matrix.csv',
                   filepath_png=f'{resultPath}/confusion_matrix.jpg')
-  
   print('Going to save model')
   lgbm_model.booster_.save_model(f'{resultPath}/model.bin')
 
-  return lgbm_model 
+  return lgbm_model
 
 if __name__ == "__main__":
   if len(sys.argv) != 4:
