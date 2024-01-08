@@ -16,6 +16,13 @@ Clone the repository to your local machine:
 git clone https://github.com/toluelemson/spatial-backend
 ```
 
+Create and activate environment Variable:
+
+```bash
+python3 -m venv spatial_env
+source spatial_env/bin/activate
+```
+
 Change directory to the cloned repository:
 
 ```bash
@@ -38,6 +45,13 @@ or if you're using Yarn:
 
 ```bash
 yarn install
+```
+
+Install python requirements:
+
+```bash
+cd src/server/deeplearning
+pip install -r requirements.txt
 ```
 
 ## Configuration
@@ -79,7 +93,7 @@ sudo docker-compose build .
 To run Spatial Frontend as a Docker container:
 
 ```bash
-sudo docker compose up
+sudo docker-compose up
 ```
 
 Spatial backend will now be accessible at `http://localhost:31057/`.
