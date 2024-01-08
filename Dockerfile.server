@@ -1,8 +1,9 @@
 FROM ubuntu:20.04
+
 # Set non-interactive frontend
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install essential packages in one layer
+# Install essential packages
 RUN apt-get update -y && \
     apt-get install -y git wget cmake gcc g++ cpp curl software-properties-common graphviz libconfuse-dev libpcap-dev libxml2-dev net-tools && \
     add-apt-repository ppa:deadsnakes/ppa -y && \
@@ -12,25 +13,43 @@ RUN apt-get update -y && \
     npm install pm2 -g && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-RUN python3.8 get-pip.py pip==20.0.2
+# Install pip
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python3.8 get-pip.py pip==20.0.2 && \
+    rm get-pip.py
+
+# Check pip version
 RUN pip3 --version
 
-# Install Python and Node.js dependencies
-COPY . ./maip-app
+# Set working directory
+WORKDIR /maip-app
 
-RUN python3.8 -m pip install --upgrade pip && \
-    python3.8 -m pip install -r maip-app/src/server/deep-learning/requirements.txt && \
-    cd maip-app/ && npm install
+# Copy app source
+COPY . .
+
+# Set the LD_PRELOAD environment variable to preload libgomp
+ENV LD_PRELOAD=/lib/aarch64-linux-gnu/libgomp.so.1
+ENV DOCKER_ENV=true
+
+# Install Python dependencies
+RUN set -e && \
+    python3.8 -m pip install --upgrade pip && \
+    python3.8 -m pip install -r src/server/deep-learning/requirements.txt
+
+# Install Node.js dependencies
+RUN cd /maip-app && npm install
 
 # Copy resources and install MMT packages
-RUN dpkg -i maip-app/src/server/mmt-packages/mmt-dpi*.deb && \
-    dpkg -i maip-app/src/server/mmt-packages/mmt-security*.deb && \
-    dpkg -i maip-app/src/server/mmt-packages/mmt-probe*.deb 2>/dev/null || true && \
+RUN dpkg -i src/server/mmt-packages/mmt-dpi*.deb && \
+    dpkg -i src/server/mmt-packages/mmt-security*.deb && \
+    dpkg -i src/server/mmt-packages/mmt-probe*.deb 2>/dev/null || true && \
     ldconfig
 
-WORKDIR ./maip-app/
-
+# Set environment variable
 ENV DOCKER_ENV=true
+
+# Expose port
 EXPOSE 31057
+
+# Start command
 CMD ["./start-maip.sh"]
