@@ -50,7 +50,7 @@ yarn install
 Install python requirements:
 
 ```bash
-cd src/server/deeplearning
+cd src/server/deep-learning
 pip install -r requirements.txt
 ```
 
