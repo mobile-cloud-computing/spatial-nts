@@ -41,7 +41,7 @@ var helmet = require('helmet');
 
 app.use(compression()); //Compress all routes
 app.use(helmet());
-app.set("port", env.SERVER_PORT);
+app.set("port", process.env.SERVER_PORT);
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({
@@ -104,18 +104,18 @@ app.all('*', (req, res, next) => {
 
 app.use(globalErrorHandler);
 
-const DB = process.env.DATABASE_LOCAL.replace(
-    '<PASSWORD>',
-    process.env.DATABASE_PASSWORD
-)
-
-mongoose.connect(process.env.DATABASE_LOCAL)
-  .then(async (connection) => {
-    console.log(`DB connection successful! ({connections}):`, connection.connections);
-  })
-  .catch(error => {
-    console.error('DB connection error:', error);
-  });
+// const DB = process..env.DATABASE_LOCAL.replace(
+//     '<PASSWORD>',
+//     process..env.DATABASE_PASSWORD
+// )
+//
+// mongoose.connect(process..env.DATABASE_LOCAL)
+//   .then(async (connection) => {
+//     console.log(`DB connection successful! ({connections}):`, connection.connections);
+//   })
+//   .catch(error => {
+//     console.error('DB connection error:', error);
+//   });
 
 // Limit requests from same API
 const limiter = rateLimit({
@@ -175,6 +175,6 @@ if (process.env.MODE === 'SERVER') {
 
 module.exports = app;
 
-var server = app.listen(app.get('port'), env.SERVER_HOST, function () {
-  console.log(`[SERVER] MAIP Server started on: http://${env.SERVER_HOST}:${env.SERVER_PORT}`);
+var server = app.listen(app.get('port'), process.env.SERVER_HOST, function () {
+  console.log(`[SERVER] MAIP Server started on: http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}`);
 });
