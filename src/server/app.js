@@ -28,10 +28,11 @@ const buildRouter = require('./routes/build');
 const retrainRouter = require('./routes/retrain');
 const predictionRouter = require('./routes/prediction');
 const predictRouter = require('./routes/predict');
-const xaiRouter = require('./routes/xai');
+const xaiRouter = require('./routes/xai_old');
+// const xaiRouter = require('./routes/xai');
 const attacksRouter = require('./routes/attacks');
 const metricsRouter = require('./routes/metrics');
-const userRouter = require('./routes/userRoutes');
+// const userRouter = require('./routes/userRoutes');
 
 const globalErrorHandler = require('./controllers/errorController');
 
@@ -97,7 +98,7 @@ app.use('/api/predict', predictRouter);
 app.use('/api/xai', xaiRouter);
 app.use('/api/attacks', attacksRouter);
 app.use('/api/metrics', metricsRouter);
-app.use('/api/users', userRouter);
+// app.use('/api/users', userRouter);
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
