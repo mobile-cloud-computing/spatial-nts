@@ -1,14 +1,14 @@
 /* eslint-disable no-plusplus */
 const {
-  LOG_PATH,
-  MODEL_PATH,
-  DEEP_LEARNING_PATH,
-  PYTHON_CMD,
+    LOG_PATH,
+    MODEL_PATH,
+    DEEP_LEARNING_PATH,
+    PYTHON_CMD,
 } = require('../constants');
 
 const {
-  spawnCommand,
-  spawnCommandAsync,
+    spawnCommand,
+    spawnCommandAsync,
 } = require('../utils/utils');
 
 const fs = require('fs');
@@ -17,141 +17,146 @@ const fs = require('fs');
  * The attack injection process status
  */
 const attacksStatus = {
-  isRunning: false, // indicate if the attack injection process is ongoing
-  config: null, // the configuration of the last attack injection process
-  lastRunAt: null, // indicate the last time of the attack injection process
+    isRunning: false, // indicate if the attack injection process is ongoing
+    config: null, // the configuration of the last attack injection process
+    lastRunAt: null, // indicate the last time of the attack injection process
 };
 
 const getAttacksStatus = () => attacksStatus;
 
 const performCTGAN = (ctganConfig, callback) => {
-  const {
-    modelId,
-    numberEpochs,
-    numberSyntheticSamples,
-  } = ctganConfig;
-  console.log(attacksStatus);
-  if (attacksStatus.isRunning) {
-    console.warn('An attack injection process is on going. Only one process can be run at a time');
-    return callback({
-      error: 'An attack injection process is on going',
+    const {
+        modelId,
+        numberEpochs,
+        numberSyntheticSamples,
+    } = ctganConfig;
+    console.log(attacksStatus);
+    if (attacksStatus.isRunning) {
+        console.warn('An attack injection process is on going. Only one process can be run at a time');
+        return callback({
+            error: 'An attack injection process is on going',
+        });
+    }
+    const inputModelFilePath = MODEL_PATH + modelId;
+    if (!fs.existsSync(inputModelFilePath)) {
+        return callback({
+            error: `The given model file ${modelId} does not exist`,
+        });
+    }
+
+    attacksStatus.isRunning = true;
+    attacksStatus.config = ctganConfig;
+    attacksStatus.lastRunAt = Date.now();
+
+    const logFile = `${LOG_PATH}ctgan_${modelId}.log`;
+    spawnCommand(PYTHON_CMD, [`${DEEP_LEARNING_PATH}/ctgan.py`, modelId, numberEpochs, numberSyntheticSamples], logFile, () => {
+        attacksStatus.isRunning = false;
+        console.log('Finish producing tabular synthetic samples using CTGAN');
     });
-  }
-  const inputModelFilePath = MODEL_PATH + modelId;
-  if (!fs.existsSync(inputModelFilePath)) {
-    return callback({
-      error: `The given model file ${modelId} does not exist`,
-    });
-  }
 
-  attacksStatus.isRunning = true;
-  attacksStatus.config = ctganConfig;
-  attacksStatus.lastRunAt = Date.now();
-
-  const logFile = `${LOG_PATH}ctgan_${modelId}.log`;
-  spawnCommand(PYTHON_CMD, [`${DEEP_LEARNING_PATH}/ctgan.py`, modelId, numberEpochs, numberSyntheticSamples], logFile, () => {
-    attacksStatus.isRunning = false;
-    console.log('Finish producing tabular synthetic samples using CTGAN');
-  });
-
-  return callback(attacksStatus);
+    return callback(attacksStatus);
 };
 
 const performPoisoningCTGAN = async (ctganConfig, callback) => {
-  const { poisoningAttacksConfig } = ctganConfig;
-  const {
-    modelId,
-    poisoningRate
-  } = poisoningAttacksConfig;
+    const {poisoningAttacksConfig} = ctganConfig;
+    const {
+        modelId,
+        poisoningRate
+    } = poisoningAttacksConfig;
 
-  const inputModelFilePath = MODEL_PATH + modelId;
-  if (!fs.existsSync(inputModelFilePath)) {
-    return callback({
-      error: `The given model file ${modelId} does not exist`,
+    const inputModelFilePath = MODEL_PATH + modelId;
+    if (!fs.existsSync(inputModelFilePath)) {
+        return callback({
+            error: `The given model file ${modelId} does not exist`,
+        });
+    }
+
+    attacksStatus.isRunning = true;
+    attacksStatus.config = poisoningAttacksConfig;
+    attacksStatus.lastRunAt = Date.now();
+
+    const logFile = `${LOG_PATH}attacks_ctgan_${modelId}_${poisoningRate}.log`;
+    await spawnCommandAsync(PYTHON_CMD, [`${DEEP_LEARNING_PATH}/attacks.py`, modelId, 'ctgan', poisoningRate, ''], logFile, () => {
+        attacksStatus.isRunning = false;
+        console.log('Finish performing poisoning attack using CTGAN');
     });
-  }
 
-  attacksStatus.isRunning = true;
-  attacksStatus.config = poisoningAttacksConfig;
-  attacksStatus.lastRunAt = Date.now();
-
-  const logFile = `${LOG_PATH}attacks_ctgan_${modelId}_${poisoningRate}.log`;
-  await spawnCommandAsync(PYTHON_CMD, [`${DEEP_LEARNING_PATH}/attacks.py`, modelId, 'ctgan', poisoningRate, ''], logFile, () => {
-    attacksStatus.isRunning = false;
-    console.log('Finish performing poisoning attack using CTGAN');
-  });
-
-  return callback(attacksStatus);
+    return callback(attacksStatus);
 };
 
 const performPoisoningRSL = async (randomSwappingLabelsConfig, callback) => {
-  const { poisoningAttacksConfig } = randomSwappingLabelsConfig;
-  const {
-    modelId,
-    poisoningRate
-  } = poisoningAttacksConfig;
-  //console.log(attacksStatus);
-  /*if (attacksStatus.isRunning) {
-    console.warn('An attack injection process is on going. Only one process can be run at a time');
-    return callback({
-      error: 'An attack injection process is on going',
-    });
-  }*/
-  const inputModelFilePath = MODEL_PATH + modelId;
-  if (!fs.existsSync(inputModelFilePath)) {
-    return callback({
-      error: `The given model file ${modelId} does not exist`,
-    });
-  }
+    const {poisoningAttacksConfig} = randomSwappingLabelsConfig;
+    const {modelId, poisoningRate} = poisoningAttacksConfig;
 
-  attacksStatus.isRunning = true;
-  attacksStatus.config = poisoningAttacksConfig;
-  attacksStatus.lastRunAt = Date.now();
+    if (attacksStatus.isRunning) {
+        console.warn('An attack injection process is ongoing. Only one process can be run at a time');
+        return callback({error: 'An attack injection process is ongoing'});
+    }
 
-  const logFile = `${LOG_PATH}attacks_rsl_${modelId}_${poisoningRate}.log`;
-  await spawnCommandAsync(PYTHON_CMD, [`${DEEP_LEARNING_PATH}/attacks.py`, modelId, 'rsl', poisoningRate, ''], logFile, () => {
-    attacksStatus.isRunning = false;
-    console.log('Finish performing poisoning random swapping labels attack');
-  });
+    const inputModelFilePath = MODEL_PATH + modelId;
 
-  return callback(attacksStatus);
-};
+    if (!fs.existsSync(inputModelFilePath)) {
+        return callback({error: `The given model file ${modelId} does not exist`});
+    }
 
+    attacksStatus.isRunning = true;
+    attacksStatus.config = poisoningAttacksConfig;
+    attacksStatus.lastRunAt = Date.now();
+
+    const logFile = `${LOG_PATH}attacks_rsl_${modelId}_${poisoningRate}.log`;
+
+    try {
+
+        await spawnCommandAsync(
+            PYTHON_CMD,
+            [`${DEEP_LEARNING_PATH}/attacks.py`, modelId, 'rsl', poisoningRate, ''],
+            logFile
+        );
+
+        attacksStatus.isRunning = false;
+        console.log('Finished performing poisoning random swapping labels attack');
+        return callback(attacksStatus);
+    } catch (error) {
+        attacksStatus.isRunning = false;
+        console.error('Error during poisoning attack:', error);
+        return callback({error: error.message});
+    }
+}
 const performPoisoningTLF = async (targetLabelFlippingConfig, callback) => {
-  const {
-    poisoningAttacksConfig,
-    targetClass,
-  } = targetLabelFlippingConfig;
-  const {
-    modelId,
-    poisoningRate,
-  } = poisoningAttacksConfig;
+    const {
+        poisoningAttacksConfig,
+        targetClass,
+    } = targetLabelFlippingConfig;
+    const {
+        modelId,
+        poisoningRate,
+    } = poisoningAttacksConfig;
 
-  const inputModelFilePath = MODEL_PATH + modelId;
-  if (!fs.existsSync(inputModelFilePath)) {
-    return callback({
-      error: `The given model file ${modelId} does not exist`,
+    const inputModelFilePath = MODEL_PATH + modelId;
+    if (!fs.existsSync(inputModelFilePath)) {
+        return callback({
+            error: `The given model file ${modelId} does not exist`,
+        });
+    }
+
+    attacksStatus.isRunning = true;
+    attacksStatus.config = targetLabelFlippingConfig;
+    attacksStatus.lastRunAt = Date.now();
+
+    const logFile = `${LOG_PATH}attacks_tlf_${modelId}_${poisoningRate}_${targetClass}.log`;
+    await spawnCommandAsync(PYTHON_CMD, [`${DEEP_LEARNING_PATH}/attacks.py`, modelId, 'tlf', poisoningRate, targetClass], logFile, () => {
+        attacksStatus.isRunning = false;
+        console.log('Finish performing poisoning target label flipping attack');
     });
-  }
 
-  attacksStatus.isRunning = true;
-  attacksStatus.config = targetLabelFlippingConfig;
-  attacksStatus.lastRunAt = Date.now();
-
-  const logFile = `${LOG_PATH}attacks_tlf_${modelId}_${poisoningRate}_${targetClass}.log`;
-  await spawnCommandAsync(PYTHON_CMD, [`${DEEP_LEARNING_PATH}/attacks.py`, modelId, 'tlf', poisoningRate, targetClass], logFile, () => {
-    attacksStatus.isRunning = false;
-    console.log('Finish performing poisoning target label flipping attack');
-  });
-
-  return callback(attacksStatus);
+    return callback(attacksStatus);
 };
 
 
 module.exports = {
-  getAttacksStatus,
-  performCTGAN,
-  performPoisoningCTGAN,
-  performPoisoningRSL,
-  performPoisoningTLF
+    getAttacksStatus,
+    performCTGAN,
+    performPoisoningCTGAN,
+    performPoisoningRSL,
+    performPoisoningTLF
 };

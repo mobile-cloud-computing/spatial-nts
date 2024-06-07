@@ -17,7 +17,7 @@ const {
 } = require('../constants');
 const {
   AC_OUTPUT_LABELS, AD_OUTPUT_LABELS_SHORT,
-} = require('../constants');
+} = require('../../client/src/constants');
 
 const isACModel = modelId => modelId && modelId.startsWith('ac-');
 
@@ -35,6 +35,7 @@ router.post('/shap', async (req, res) => {
   const {
     shapConfig,
   } = req.body;
+  console.log(shapConfig, "mpsijbgdshjsfdbkjsfbj")
   if (!shapConfig) {
     res.status(401).send({
       error: 'Missing SHAP configuration. Please read the docs',
