@@ -40,30 +40,40 @@ const spawnCommand = (cmd, params, logFilePath, onCloseCallback = null) => {
 
 const spawnCommandAsync = (cmd, params, logFilePath) => {
   return new Promise((resolve, reject) => {
-    //console.log('Command to be copied');
-    //console.log(`${cmd} ${params.join(' ')}`);
-    //const logFile = fs.createWriteStream(logFilePath, {
-    //  flags: 'a',
-    //});
+    // Create a writable stream for the log file
+    const logFile = fs.createWriteStream(logFilePath, {
+      flags: 'a',
+    });
     const proc = spawn(cmd, params);
-    //proc.stdout.pipe(logFile);
-    //proc.stderr.pipe(logFile);
+    // Pipe stdout and stderr to the log file
+    proc.stdout.pipe(logFile);
+    proc.stderr.pipe(logFile);
     proc.on('close', (code) => {
-      //console.log('Process has completed: ', cmd, params);
-      //console.log('The log can be found at: ', logFilePath);
+      logFile.end(); // Close the log file stream
+      console.log(code, params, cmd)
       if (code === 0) {
         resolve();
       } else {
-        resolve(401);
-        //reject(new Error(`Command failed with code ${code}`));
+        reject(new Error(`Command failed with code ${code}`));
       }
     });
     proc.on('error', (err) => {
-      resolve(401);
-      //reject(new Error(`Command execution error: ${err.message}`));
+      logFile.end(); // Close the log file stream in case of error
+      reject(new Error(`Command execution error: ${err.message}`));
     });
   });
 };
+
+// Example usage (assuming you have defined constants like PYTHON_CMD, DEEP_LEARNING_PATH, etc.)
+/* const PYTHON_CMD = 'python3';
+const DEEP_LEARNING_PATH = '/path/to/deep_learning_scripts';
+const MODEL_PATH = '/path/to/models/';
+const LOG_PATH = '/path/to/logs/';
+const attacksStatus = {
+  isRunning: false,
+  config: null,
+  lastRunAt: null,
+}; */
 
 // const spawnCommand2 = (cmd, params, onCloseCallback, logOutputFilePath, logErrorFilePath) => {
 //   const command = spawn(cmd, params);
