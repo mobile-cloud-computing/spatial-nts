@@ -10,6 +10,8 @@ const {
 const {
   v4: uuidv4,
 } = require('uuid');
+const {promisify} = require("util");
+const readFileAsync = promisify(fs.readFile);
 
 let allInterfaces = null;
 
@@ -152,6 +154,33 @@ function listNetworkInterfaces() {
   return os.networkInterfaces();
 }
 
+// const readTextFileFromPathsAsync = async (paths) => {
+//
+//     for (const filePath of paths) {
+//         try {
+//             const data = await readFileAsync(filePath, 'utf8');
+//             return data;
+//         } catch (err) {
+//             // Continue to the next path
+//         }
+//     }
+//     throw new Error('File not found in any specified paths');
+// };
+
+async function readTextFileFromPathsAsync(paths) {
+    for (const filePath of paths) {
+        try {
+            if (fs.existsSync(filePath)) {
+                const data = await fs.promises.readFile(filePath, 'utf-8');
+                return data;
+            }
+        } catch (err) {
+            console.error(`Error reading file from path: ${filePath}`, err);
+        }
+    }
+    throw new Error('No valid configuration file found');
+}
+
 
 module.exports = {
   spawnCommand,
@@ -162,4 +191,5 @@ module.exports = {
   getUniqueId,
   replaceDelimiterInCsv,
   listNetworkInterfaces,
+  readTextFileFromPathsAsync
 };

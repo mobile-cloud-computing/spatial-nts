@@ -124,15 +124,14 @@ router.post('/poisoning/ctgan', async (req, res) => {
 });
 
 router.post('/poisoning/random-swapping-labels', async (req, res) => {
-    const {
-        randomSwappingLabelsConfig,
-    } = req.body;
+    const { randomSwappingLabelsConfig } = req.body;
 
     if (!randomSwappingLabelsConfig) {
-        res.status(401).send({
+        return res.status(401).send({
             error: 'Missing poisoning RSL attack configuration. Please read the docs',
         });
     }
+
     try {
         await performPoisoningRSL(randomSwappingLabelsConfig, (attacksStatus) => {
             res.send(attacksStatus);
@@ -145,16 +144,22 @@ router.post('/poisoning/random-swapping-labels', async (req, res) => {
 });
 
 router.post('/poisoning/target-label-flipping', async (req, res) => {
-    const {
-        targetLabelFlippingConfig,
-    } = req.body;
+    const { targetLabelFlippingConfig } = req.body;
+
     if (!targetLabelFlippingConfig) {
-        res.status(401).send({
+        return res.status(401).send({
             error: 'Missing poisoning TLF attack configuration. Please read the docs',
         });
-    } else {
-        performPoisoningTLF(targetLabelFlippingConfig, (attacksStatus) => {
+    }
+
+    try {
+        await performPoisoningTLF(targetLabelFlippingConfig, (attacksStatus) => {
+            console.log(targetLabelFlippingConfig, attacksStatus, "big2")
             res.send(attacksStatus);
+        });
+    } catch (error) {
+        res.status(500).send({
+            error: 'An error occurred while performing the poisoning attack',
         });
     }
 });
@@ -178,7 +183,7 @@ router.get('/poisoning/:typeAttack/:modelId/download', (req, res, next) => {
 
 router.get('/poisoning/:typeAttack/:modelId/view', (req, res, next) => {
     const {typeAttack, modelId} = req.params;
-    console.log(typeAttack, modelId)
+    console.log(typeAttack, modelId, "osssh")
 
     const poisonedDatasetPath = `${ATTACKS_PATH}${modelId.replace('.h5', '')}/${typeAttack}_poisoned_dataset.csv`;
     const poisonedDatasetToViewPath = `${ATTACKS_PATH}${modelId.replace('.h5', '')}/${typeAttack}_poisoned_dataset_view.csv`;

@@ -17,6 +17,7 @@ router.post('/', (req, res) => {
     retrainConfig,
   } = req.body;
 
+  console.log(retrainConfig, "moral")
   if (!retrainConfig) {
     res.status(401).send({
       error: 'Missing retrain configuration. Please read the docs',
@@ -47,7 +48,6 @@ router.post('/:modelId', (req, res) => {
   const {
     retrainADConfig,
   } = req.body;
-  console.log(modelId);
   console.log(retrainADConfig);
   if (!retrainADConfig) {
     res.status(401).send({

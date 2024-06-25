@@ -15,7 +15,7 @@ const {
     listFiles, readTextFile, isFileExist,
 } = require('../utils/file-utils');
 const {
-    replaceDelimiterInCsv
+    replaceDelimiterInCsv, readTextFileFromPathsAsync
 } = require('../utils/utils');
 
 /* GET built models with lastBuildAt */
@@ -51,8 +51,24 @@ router.get('/', async (req, res, next) => {
             const buildingStatusPath = path.join(TRAINING_PATH, modelId.replace('.h5', ''), 'buildingStatus.json');
             const buildingStatus = await readFileAsync(buildingStatusPath);
             const lastBuildAt = JSON.parse(buildingStatus).lastBuildAt;
+            // const buildConfigPath = path.join(TRAINING_PATH, modelId.replace('.h5', ''), 'retrain-config.json');
+
+            const retrainConfigPath = path.join(TRAINING_PATH, modelId.replace('.h5', ''), 'retrain-config.json');
             const buildConfigPath = path.join(TRAINING_PATH, modelId.replace('.h5', ''), 'build-config.json');
-            const buildConfig = await readFileAsync(buildConfigPath);
+
+
+// Function to get the correct configuration path
+            const getConfigPath = () => {
+                if (fs.existsSync(buildConfigPath)) {
+                    return buildConfigPath
+                } else {
+                    return retrainConfigPath;
+                }
+            };
+
+            const configPath = getConfigPath();
+
+            const buildConfig = await readFileAsync(configPath);
             const config = JSON.parse(buildConfig);
             modelList.push({modelId: modelId, lastBuildAt, buildConfig: config});
         }
@@ -125,15 +141,44 @@ router.get('/:modelId/download', (req, res, next) => {
 /**
  * Get the information of a model
  */
-router.get('/:modelId/build-config', (req, res, next) => {
+router.get('/:modelId/build-config', async (req, res, next) => {
     const {modelId} = req.params;
-    readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/build-config.json`, (err, buildConfig) => {
-        if (err) {
-            res.status(401).send({error: 'Something went wrong!'});
-        } else {
-            res.send({buildConfig});
-        }
-    });
+    const modelPath = `${TRAINING_PATH}${modelId.replace('.h5', '')}`
+
+    // Get the last build time for the model
+    const buildingStatus = await readFileAsync(`${modelPath}/buildingStatus.json`, 'utf8');
+
+    // Get the build config for the model
+    const buildConfigPaths = [
+        path.join(modelPath, 'build-config.json'),
+        path.join(modelPath, 'retrain-config.json')
+    ];
+
+    try {
+        const buildConfig = await readTextFileFromPathsAsync(buildConfigPaths);
+        res.send({ buildConfig });
+    } catch (err) {
+        res.status(401).send({ error: 'Something went wrong!' });
+    }
+
+
+
+    // readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/retrain-config.json`, (err, buildConfig) => {
+    // //     if (err) {
+    // //         res.status(401).send({error: 'Something went wrong!'});
+    // //     } else {
+    // //         res.send({buildConfig});
+    // //     }
+    // // });
+    // // });
+
+    // readTextFile(buildConfig, (err, buildConfig) => {
+    //     if (err) {
+    //         res.status(401).send({error: 'Something went wrong!'});
+    //     } else {
+    //         res.send({buildConfig});
+    //     }
+    // });
 });
 
 router.get('/:modelId/confusion-matrix', (req, res, next) => {
@@ -182,72 +227,175 @@ router.get('/:modelId/stats', (req, res, next) => {
     });
 });
 
-router.get('/:modelId', (req, res, next) => {
-    const {modelId} = req.params;
+// router.get('/:modelId', (req, res, next) => {
+//         const {modelId} = req.params;
+//
+//         // Get the stats for the model
+//         readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/results/stats.csv`, (err, stats) => {
+//             if (err) {
+//                 res.status(401).send({error: 'Something went wrong!'});
+//                 return;
+//             }
+//         })
+//
+//         // Get the last build time for the model
+//         readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/buildingStatus.json`, (err, buildingStatus) => {
+//                 if (err) {
+//                     res.status(401).send({error: 'Something went wrong!'});
+//                     return;
+//                 }
+//
+//                 const readTextFileFromPaths = (paths, callback) => {
+//                     const tryReadFile = (index) => {
+//                         if (index >= paths.length) {
+//                             callback(new Error('File not found in any specified paths'), null);
+//                             return;
+//                         }
+//
+//                         fs.readFile(paths[index], 'utf8', (err, data) => {
+//                             if (err) {
+//                                 tryReadFile(index + 1);
+//                             } else {
+//                                 callback(null, data);
+//                             }
+//                         });
+//                     };
+//                     tryReadFile(0);
+//                 }
+//
+//
+//                 // Get the build config for the model
+//                 // readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/build-config.json`, (err, buildConfig) => {
+//                 //     if (err) {
+//                 //         res.status(401).send({error: 'Something went wrong!'});
+//                 //         return;
+//                 //     }
+//                 const pathsToCheck = [
+//                     path.join(TRAINING_PATH, modelId.replace('.h5', ''), 'build-config.json'),
+//                     path.join(TRAINING_PATH, modelId.replace('.h5', ''), 'retrain-config.json')
+//                 ];
+//
+//                 readTextFileFromPaths(pathsToCheck, (err, buildConfig) => {
+//                     if (err) {
+//                         res.status(401).send({error: 'Something went wrong!'});
+//                         return;
+//                     }
+//
+//                 });
+//
+//
+//                 // Get the confusion matrix for the model
+//                 readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/results/confusion_matrix.csv`, (err, matrix) => {
+//                     if (err) {
+//                         res.status(401).send({error: 'Something went wrong!'});
+//                         return;
+//                     }
+//
+//                     // Get the training samples for the model
+//                     const trainingSamplesFilePath = `${TRAINING_PATH}${modelId.replace('.h5', '')}/datasets/Train_samples.csv`;
+//                     isFileExist(trainingSamplesFilePath, (ret) => {
+//                         if (!ret) {
+//                             res.status(401).send(`The training samples file of model ${modelId} does not exist`);
+//                             return;
+//                         }
+//
+//                         // Get the testing samples for the model
+//                         const testingSamplesFilePath = `${TRAINING_PATH}${modelId.replace('.h5', '')}/datasets/Test_samples.csv`;
+//                         isFileExist(testingSamplesFilePath, (ret) => {
+//                             if (!ret) {
+//                                 res.status(401).send(`The testing samples file of model ${modelId} does not exist`);
+//                                 return;
+//                             }
+//
+//                             const status = JSON.parse(buildingStatus);
+//                             console.log(status.lastBuildAt);
+//
+//                             // Send the response with all the data for the model
+//                             res.send({
+//                                 stats: stats,
+//                                 lastBuildAt: status.lastBuildAt,
+//                                 buildConfig: buildConfig,
+//                                 confusionMatrix: matrix,
+//                                 trainingSamples: trainingSamplesFilePath,
+//                                 testingSamples: testingSamplesFilePath,
+//                             });
+//                         });
+//                     });
+//                 });
+//             }
+//         )
+//         ;
+//     }
+// )
+//
+// ;
 
-    // Get the stats for the model
-    readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/results/stats.csv`, (err, stats) => {
-        if (err) {
-            res.status(401).send({error: 'Something went wrong!'});
-            return;
-        }
+
+const fileExistsAsync = promisify(fs.access);
+
+// const readTextFileFromPathsAsync = async (paths) => {
+//     for (const filePath of paths) {
+//         try {
+//             const data = await readFileAsync(filePath, 'utf8');
+//             return data;
+//         } catch (err) {
+//             // Continue to the next path
+//         }
+//     }
+//     throw new Error('File not found in any specified paths');
+// };
+
+
+router.get('/:modelId', async (req, res, next) => {
+    const {modelId} = req.params;
+    const modelPath = `${TRAINING_PATH}${modelId.replace('.h5', '')}`;
+
+    try {
+        // Get the stats for the model
+        const stats = await readFileAsync(`${modelPath}/results/stats.csv`, 'utf8');
 
         // Get the last build time for the model
-        readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/buildingStatus.json`, (err, buildingStatus) => {
-            if (err) {
-                res.status(401).send({error: 'Something went wrong!'});
-                return;
-            }
+        const buildingStatus = await readFileAsync(`${modelPath}/buildingStatus.json`, 'utf8');
 
-            // Get the build config for the model
-            readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/build-config.json`, (err, buildConfig) => {
-                if (err) {
-                    res.status(401).send({error: 'Something went wrong!'});
-                    return;
-                }
+        // Get the build config for the model
+        const buildConfigPaths = [
+            path.join(modelPath, 'build-config.json'),
+            path.join(modelPath, 'retrain-config.json')
+        ];
+        const buildConfig = await readTextFileFromPathsAsync(buildConfigPaths);
 
-                // Get the confusion matrix for the model
-                readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/results/confusion_matrix.csv`, (err, matrix) => {
-                    if (err) {
-                        res.status(401).send({error: 'Something went wrong!'});
-                        return;
-                    }
+        // Get the confusion matrix for the model
+        const matrix = await readFileAsync(`${modelPath}/results/confusion_matrix.csv`, 'utf8');
 
-                    // Get the training samples for the model
-                    const trainingSamplesFilePath = `${TRAINING_PATH}${modelId.replace('.h5', '')}/datasets/Train_samples.csv`;
-                    isFileExist(trainingSamplesFilePath, (ret) => {
-                        if (!ret) {
-                            res.status(401).send(`The training samples file of model ${modelId} does not exist`);
-                            return;
-                        }
+        // Get the training samples for the model
+        const trainingSamplesFilePath = `${modelPath}/datasets/Train_samples.csv`;
+        await fileExistsAsync(trainingSamplesFilePath);
 
-                        // Get the testing samples for the model
-                        const testingSamplesFilePath = `${TRAINING_PATH}${modelId.replace('.h5', '')}/datasets/Test_samples.csv`;
-                        isFileExist(testingSamplesFilePath, (ret) => {
-                            if (!ret) {
-                                res.status(401).send(`The testing samples file of model ${modelId} does not exist`);
-                                return;
-                            }
+        // Get the testing samples for the model
+        const testingSamplesFilePath = `${modelPath}/datasets/Test_samples.csv`;
+        await fileExistsAsync(testingSamplesFilePath);
 
-                            const status = JSON.parse(buildingStatus);
-                            console.log(status.lastBuildAt);
+        const status = JSON.parse(buildingStatus);
+        console.log(status.lastBuildAt);
 
-                            // Send the response with all the data for the model
-                            res.send({
-                                stats: stats,
-                                lastBuildAt: status.lastBuildAt,
-                                buildConfig: buildConfig,
-                                confusionMatrix: matrix,
-                                trainingSamples: trainingSamplesFilePath,
-                                testingSamples: testingSamplesFilePath,
-                            });
-                        });
-                    });
-                });
-            });
+        // Send the response with all the data for the model
+        res.send({
+            stats: stats,
+            lastBuildAt: status.lastBuildAt,
+            buildConfig: buildConfig,
+            confusionMatrix: matrix,
+            trainingSamples: trainingSamplesFilePath,
+            testingSamples: testingSamplesFilePath,
         });
-    });
+
+    } catch (err) {
+        console.error(err);
+        res.status(401).send({error: 'Something went wrong!'});
+    }
 });
+
+module.exports = router;
+
 
 router.get('/:modelId/probabilities', (req, res, next) => {
     const {modelId} = req.params;
@@ -263,20 +411,40 @@ router.get('/:modelId/probabilities', (req, res, next) => {
     });
 });
 
-// TODO: combine 'predictions.csv' and 'predicted_probabilities.csv' into 1 csv file ???
+
 router.get('/:modelId/predictions', (req, res, next) => {
     const {modelId} = req.params;
-    readTextFile(`${TRAINING_PATH}${modelId.replace('.h5', '')}/results/predictions.csv`, (err, predictions) => {
+    const filePath = path.join(TRAINING_PATH, modelId.replace('.h5', ''), 'results', 'predictions.csv');
+
+
+    // TODO: combine 'predictions.csv' and 'predicted_probabilities.csv' into 1 csv file ???
+    const readTextFile = (filePath, callback) => {
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if (err) {
+                callback(err, null);
+            } else {
+                callback(null, data);
+            }
+        });
+    };
+
+    readTextFile(filePath, (err, predictions) => {
         if (err) {
-            res.status(401).send(`The predictions file of model ${modelId} does not exist`);
+            if (err.code === 'ENOENT') {
+                // File not found
+                res.status(404).send({error: 'Predictions file not found'});
+            } else {
+                // Other errors
+                res.status(500).send({error: 'An error occurred while reading the predictions file'});
+            }
             return;
-        } else {
-            res.send({
-                predictions: predictions,
-            });
         }
+
+        console.log(filePath, "Filepath o", predictions)
+        res.status(200).send({predictions});
     });
 });
+
 
 router.put('/:modelId', async (req, res, next) => {
     const {modelId} = req.params;

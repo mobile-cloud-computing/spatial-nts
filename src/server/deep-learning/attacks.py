@@ -47,6 +47,9 @@ def running_poisoning_attacks(modelId, typePoisoningAttacks, poisoningRate, targ
 
     X_poisoned_train = train_data.iloc[:, :-1].copy().values.tolist()
     y_poisoned_train = train_data.iloc[:, -1].copy().values.tolist()
+
+    X_poisoned_test = test_data.iloc[:, :-1].copy().values.tolist()
+    y_poisoned_test = test_data.iloc[:, -1].copy().values.tolist()
     # print(y_poisoned_train)
     poison_count = -1
     original_count = -1

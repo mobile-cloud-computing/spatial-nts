@@ -264,7 +264,9 @@ const retrainModel = (retrainConfig, callback) => {
 
   const logFile = `${LOG_PATH}retraining_${retrainId.replace('.h5', '')}.log`;
   const resultsPath = `${TRAINING_PATH}${retrainId.replace('.h5', '')}/results`;
+
   createFolderSync(resultsPath);
+  console.log("wows", trainingDatasetFile, testingDatasetFile, resultsPath, nb_epoch_cnn, nb_epoch_sae, batch_size_cnn, batch_size_sae)
   spawnCommand(PYTHON_CMD, [`${DEEP_LEARNING_PATH}/retrain.py`, trainingDatasetFile, testingDatasetFile, resultsPath, nb_epoch_cnn, nb_epoch_sae, batch_size_cnn, batch_size_sae,], logFile, () => {
     retrainStatus.isRunning = false;
     console.log('Finish retraining the model');
