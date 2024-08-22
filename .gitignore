@@ -5,7 +5,7 @@ node_modules
 *.log
 *.DS_Store
 *.pem
-.env
+src/server/.env
 src/server/logs/*.log
 src/server/deep-learning/__pycache__/
 src/server/mmt/outputs/*
