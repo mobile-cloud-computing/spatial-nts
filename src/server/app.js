@@ -1,26 +1,61 @@
-var express = require('express');
+const express = require('express');
+const swaggerSpec = require('./swagger/swagger.json');
 const mongoose = require('mongoose');
-var path = require('path');
-var cookieParser = require('cookie-parser');
+const path = require('path');
+const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const fileUpload = require('express-fileupload');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./swagger/swagger.json');
-var bodyParser = require('body-parser');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
-const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
 const AppError = require('./utils/appError');
 const cors = require('cors');
-// read and pass the environment variables into reactjs application
-const env = dotenv.config().parsed;
+const compression = require('compression');
+const helmet = require('helmet');
+const globalErrorHandler = require('./controllers/errorController');
+const http = require('http');
 
+dotenv.config(); // Load environment variables
+
+// Initialize Express app
+const app = express();
+app.set("port", process.env.SERVER_PORT || 3000);
+
+// Middleware setup
+app.use(compression()); // Compress all routes
+app.use(helmet()); // Secure Express apps by setting various HTTP headers
+app.use(logger('dev')); // Log HTTP requests
+app.use(express.json({ limit: '10kb' })); // Parse JSON bodies with a size limit
+app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Parse URL-encoded bodies
+app.use(cookieParser()); // Parse cookies
+app.use(fileUpload()); // Handle file uploads
+
+// CORS setup
+app.use(cors({
+    origin: '*', // Adjust as needed
+    methods: ['GET', 'POST', 'DELETE', 'PUT'],
+}));
+
+// Security Middleware
+app.use(mongoSanitize()); // Data sanitization against NoSQL query injection
+app.use(xss()); // Data sanitization against XSS
+app.use(hpp()); // Prevent HTTP parameter pollution
+
+// Rate limiting to prevent abuse
+const limiter = rateLimit({
+    max: 100,
+    windowMs: 60 * 60 * 1000, // 100 requests per hour
+    message: 'Too many requests from this IP, please try again in an hour!'
+});
+app.use('/api', limiter);
+
+// Routers
 const acRouter = require('./routes/ac');
 const mmtRouter = require('./routes/mmt');
-const pcapRouter = require('./routes/pcap');
+const pcapRouter = require('./routes/unused/pcap');
 const reportRouter = require('./routes/report');
 const logRouter = require('./routes/log');
 const modelRouter = require('./routes/model');
@@ -29,61 +64,8 @@ const retrainRouter = require('./routes/retrain');
 const predictionRouter = require('./routes/prediction');
 const predictRouter = require('./routes/predict');
 const xaiRouter = require('./routes/xai_old');
-// const xaiRouter = require('./routes/xai');
 const attacksRouter = require('./routes/attacks');
 const metricsRouter = require('./routes/metrics');
-// const userRouter = require('./routes/userRoutes');
-
-const globalErrorHandler = require('./controllers/errorController');
-
-const app = express();
-var compression = require('compression');
-var helmet = require('helmet');
-
-app.use(compression()); //Compress all routes
-app.use(helmet());
-app.set("port", process.env.SERVER_PORT);
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({
-  extended: false,
-}));
-app.use(cookieParser());
-app.use(fileUpload());
-app.use(bodyParser.json({
-  limit: '50mb'
-}));
-app.use(bodyParser.urlencoded({
-  limit: '50mb',
-  extended: true
-}))
-app.use(cookieParser());
-// Set up CORS
-//app.use(cors());
-app.use(cors({
-  origin: '*', // replace with your client origin
-  methods: ['GET', 'POST', 'DELETE', 'PUT'],
-}));
-// Add headers
-/*app.use((req, res, next) => {
-  // Website you wish to allow to connect
-  res.setHeader('Access-Control-Allow-Origin', '*');
-
-  // Request methods you wish to allow
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE');
-
-  // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, content-type, authorization');
-
-  // Set to true if you need the website to include cookies in the requests sent
-  // to the API (e.g. in case you use sessions)
-  res.setHeader('Access-Control-Allow-Credentials', true);
-
-  // Log the request
-  // logInfo(`${req.method} ${req.protocol}://${req.hostname}${req.path} ${res.statusCode}`);
-  // Pass to next layer of middleware
-  next();
-});*/
 
 app.use('/api/ac', acRouter);
 app.use('/api/mmt', mmtRouter);
@@ -98,84 +80,32 @@ app.use('/api/predict', predictRouter);
 app.use('/api/xai', xaiRouter);
 app.use('/api/attacks', attacksRouter);
 app.use('/api/metrics', metricsRouter);
-// app.use('/api/users', userRouter);
-app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-});
 
-app.use(globalErrorHandler);
-
-// const DB = process..env.DATABASE_LOCAL.replace(
-//     '<PASSWORD>',
-//     process..env.DATABASE_PASSWORD
-// )
-//
-// mongoose.connect(process..env.DATABASE_LOCAL)
-//   .then(async (connection) => {
-//     console.log(`DB connection successful! ({connections}):`, connection.connections);
-//   })
-//   .catch(error => {
-//     console.error('DB connection error:', error);
-//   });
-
-// Limit requests from same API
-const limiter = rateLimit({
-  max: 100,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again in an hour!'
-});
-
-app.use('/api', limiter);
-
-
-// Data sanitization against NoSQL query injection
-app.use(mongoSanitize());
-// Data sanitization against XSS
-app.use(xss());
-
-
-app.use(
-  hpp({
-    whitelist: [
-      'duration',
-      'ratingsQuantity',
-      'ratingsAverage',
-      'maxGroupSize',
-      'difficulty',
-      'price'
-    ]
-  })
-);
-
-app.use(compression());
-
-// Test middleware
-app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-  // console.log(req.cookies);
-  next();
-});
-
-
-// Body parser, reading data from body into req.body
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(cookieParser());
-
-if (process.env.MODE === 'SERVER') {
-  app.use(express.static(path.join(__dirname, '../public')));
-  app.get('/*', function (req, res) {
-    res.sendFile(path.join(__dirname, '../public', 'index.html'));
-  });
-} else if (process.env.MODE === 'API') {
-  // start Swagger API server 
-  app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-  app.use(express.static(path.join(__dirname, 'swagger')));
-  module.exports = app;
+// Handle root route based on mode
+if (process.env.MODE === 'API') {
+    console.log(`[MODE] Running in API mode`);
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    app.get('/', (req, res) => res.redirect('/api-docs'));
+} else if (process.env.MODE === 'SERVER') {
+    console.log(`[MODE] Running in SERVER mode`);
+    app.use(express.static(path.join(__dirname, '../public')));
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname, '../public', 'index.html'));
+    });
 }
 
-module.exports = app;
-
-var server = app.listen(app.get('port'), process.env.SERVER_HOST, function () {
-  console.log(`[SERVER] MAIP Server started on: http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}`);
+// Handle undefined routes
+app.all('*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
+
+// Error handling middleware
+app.use(globalErrorHandler);
+
+// Start HTTP server
+const server = http.createServer(app);
+server.listen(app.get('port'), process.env.SERVER_HOST || 'localhost', () => {
+    console.log(`[SERVER] HTTP Server started on http://${process.env.SERVER_HOST || 'localhost'}:${app.get('port')}`);
+});
+
+module.exports = app;

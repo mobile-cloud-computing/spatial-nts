@@ -1,21 +1,21 @@
 {
   "openapi" : "3.0.2",
   "info" : {
-    "title" : "Montimage AI Platform (MAIP)",
+    "title" : "SPATIAL Platform",
     "description" : "The APIs provided by MAIP",
-    "termsOfService" : "https://github.com/Montimage/maip",
+    "termsOfService" : "https://github.com/..",
     "contact" : {
-      "email" : "developer@montimage.com"
+      "email" : ".."
     },
     "license" : {
-      "name" : "Montimage",
-      "url" : "https://www.montimage.com"
+      "name" : "Spatial",
+      "url" : "..."
     },
     "version" : "v1"
   },
   "externalDocs" : {
-    "description" : "Find out more about Montimage open-source projects",
-    "url" : "https://github.com/montimage"
+    "description" : "Find out more about Spatial open-source projects",
+    "url" : "https://github.com/.."
   },
   "servers": [
     {
@@ -23,23 +23,14 @@
       "url": "http://localhost:31057/api/"
     }
   ],
-  "tags" : [ {
-    "name" : "mmt",
-    "description" : "Everything relates to manipulating the MMT Tool",
-    "externalDocs" : {
-      "description" : "Find out more",
-      "url" : "https://github.com/montimage/mmt-probe"
-    }
-  }, {
+  "tags" : [
+    {
     "name" : "reports",
     "description" : "Access to reports which are the output of analysing a pcap file",
     "externalDocs" : {
       "description" : "More detail on the report format",
       "url" : "http://github.com/montimage/mmt-probe"
     }
-  }, {
-    "name" : "pcaps",
-    "description" : "List/upload trace file for analysing"
   }, {
     "name" : "logs",
     "description" : "Access to the log of MMT Tools"
@@ -54,168 +45,6 @@
     "description" : "API relates to XAI"
   } ],
   "paths" : {
-    "/mmt/" : {
-      "get" : {
-        "tags" : [ "mmt" ],
-        "summary" : "Get the status of MMT Tool",
-        "description" : "Get the status of MMT Tool",
-        "operationId" : "getMMTStatus",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "Successful operation",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/mmtStatus"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mmt/stop" : {
-      "get" : {
-        "tags" : [ "mmt" ],
-        "summary" : "Stop analyzing",
-        "description" : "Stop the analyzing process if there is any",
-        "operationId" : "stopMMT",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "Successful operation",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/mmtStatus"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mmt/offline" : {
-      "post" : {
-        "tags" : [ "mmt" ],
-        "summary" : "Start analysing a pcap file",
-        "description" : "Analysing a pcap file",
-        "operationId" : "runMMTOffline",
-        "requestBody" : {
-          "description" : "The name of the pcap file",
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "fileName" : {
-                    "type" : "string",
-                    "example" : "tcp_bbc-out-of-order.pcap"
-                  }
-                }
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Successful operation",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/mmtStatus"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Cannot launch MMT Tool"
-          }
-        }
-      }
-    },
-    "/mmt/dataset" : {
-      "post" : {
-        "tags" : [ "mmt" ],
-        "summary" : "Analyzing a dataset",
-        "description" : "Start analysing a dataset which includes a set of trace files",
-        "operationId" : "runMMTdataset",
-        "requestBody" : {
-          "description" : "The name of the dataset",
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "datasetName" : {
-                    "type" : "string",
-                    "example" : "tcp-dataset"
-                  }
-                }
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Successful operation",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/mmtStatus"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Cannot launch MMT Tool"
-          }
-        }
-      }
-    },
-    "/mmt/online" : {
-      "post" : {
-        "tags" : [ "mmt" ],
-        "summary" : "Start monitor a network interface in real-time",
-        "description" : "Monitor a network interface in real-time",
-        "operationId" : "runMMTOnline",
-        "requestBody" : {
-          "description" : "The name of the interface on the monitoring machine",
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "netInf" : {
-                    "type" : "string",
-                    "example" : "enp0s1"
-                  }
-                }
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Successful operation",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/mmtStatus"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Cannot launch MMT Tool"
-          }
-        }
-      }
-    },
     "/reports/" : {
       "get" : {
         "tags" : [ "reports" ],
