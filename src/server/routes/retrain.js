@@ -13,11 +13,9 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const {
-    retrainConfig,
-  } = req.body;
+  const { retrainConfig } = req.body;
 
-  console.log(retrainConfig, "moral")
+  console.log(retrainConfig, "moral");
   if (!retrainConfig) {
     res.status(401).send({
       error: 'Missing retrain configuration. Please read the docs',
@@ -26,7 +24,7 @@ router.post('/', (req, res) => {
     const retrainStatus = getRetrainStatus();
     if (retrainStatus.isRunning) {
       res.status(401).send({
-        error: 'A building process is running. Only one process is allowed at the time. Please try again later',
+        error: 'A retraining process is running. Only one process is allowed at a time. Please try again later',
       });
     } else {
       retrainModel(retrainConfig, (retrainStatus) => {
@@ -45,9 +43,7 @@ router.post('/', (req, res) => {
 
 router.post('/:modelId', (req, res) => {
   const { modelId } = req.params;
-  const {
-    retrainADConfig,
-  } = req.body;
+  const { retrainADConfig } = req.body;
   console.log(retrainADConfig);
   if (!retrainADConfig) {
     res.status(401).send({
@@ -57,10 +53,10 @@ router.post('/:modelId', (req, res) => {
     const retrainStatus = getRetrainStatus();
     if (retrainStatus.isRunning) {
       res.status(401).send({
-        error: 'A building process is running. Only one process is allowed at the time. Please try again later',
+        error: 'A retraining process is running. Only one process is allowed at a time. Please try again later',
       });
     } else {
-      const retrainConfig = { "modelId": modelId, ...retrainADConfig };
+      const retrainConfig = { modelId, ...retrainADConfig };
       console.log(retrainConfig);
       retrainModel(retrainConfig, (retrainStatus) => {
         if (retrainStatus.error) {
@@ -75,6 +71,5 @@ router.post('/:modelId', (req, res) => {
     }
   }
 });
-
 
 module.exports = router;

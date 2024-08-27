@@ -39,11 +39,10 @@ router.post('/', (req, res) => {
                     });
                 } else {
                     console.log(buildStatus, "buildoooo");
-                    const {modelType} = buildACConfig;
-                    console.log(modelType, "is model Type empty")
-                    const mt = modelType.toLowerCase().split(' ').join('')
+                    const { modelType } = buildConfig;
+                    console.log(modelType, "is model Type empty");
+                    const mt = modelType.toLowerCase().split(' ').join('');
                     const modelId = `ac-${mt}-${buildStatus.lastBuildId}`;
-                    // const modelId = buildStatus.lastBuildId;
                     const buildStatusFilePath = `${TRAINING_PATH}${modelId.replace('.h5', '')}/buildingStatus.json`;
                     fs.writeFile(buildStatusFilePath, JSON.stringify(buildStatus), (err) => {
                         if (err) {

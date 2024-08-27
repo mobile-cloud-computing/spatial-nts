@@ -5,13 +5,13 @@ const {
   PCAP_PATH,
   PCAP_EXTENSIONS,
   DEFAULT_LOG_PATH,
-} = require('../constants');
+} = require('../../constants');
 const {
   listFiles,
   listDirectories,
   createFolder,
-} = require('../utils/file-utils');
-const { spawnCommand } = require('../utils/utils');
+} = require('../../utils/file-utils');
+const { spawnCommand } = require('../../utils/utils');
 
 const router = express.Router();
 

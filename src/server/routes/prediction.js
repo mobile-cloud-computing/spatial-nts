@@ -67,7 +67,24 @@ router.get('/:predictionId/normal', (req, res, next) => {
 // });
 
 /**
- * Get a prediction result content
+ * @swagger
+ * /{predictionId}:
+ *   get:
+ *     summary: Get the prediction statistics.
+ *     tags:
+ *       - Predictions
+ *     parameters:
+ *       - in: path
+ *         name: predictionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the prediction.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved prediction statistics.
+ *       401:
+ *         description: An error occurred while retrieving the prediction statistics.
  */
 router.get('/:predictionId', (req, res, next) => {
   const { predictionId } = req.params;

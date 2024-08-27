@@ -29,9 +29,9 @@ router.delete('/', (req, res, next) => {
       });
       
       res.send({
-        message: 'All report folders and their contents have been deleted successfully'
+        message: 'All report folders and their contents have been deleted successfully',
       });
-      
+
     } catch (err) {
       console.error(err);
       res.status(500).send('Server Error');
@@ -40,9 +40,7 @@ router.delete('/', (req, res, next) => {
 });
 
 router.get('/:reportId', (req, res) => {
-  const {
-    reportId,
-  } = req.params;
+  const { reportId } = req.params;
   listFiles(`${REPORT_PATH}${reportId}`, '.csv', (files) => {
     res.send({
       csvFiles: files,
@@ -51,10 +49,7 @@ router.get('/:reportId', (req, res) => {
 });
 
 router.get('/:reportId/:fileName/download', (req, res) => {
-  const {
-    fileName,
-    reportId,
-  } = req.params;
+  const { fileName, reportId } = req.params;
   const reportFilePath = `${REPORT_PATH}${reportId}/${fileName}`;
   isFileExist(reportFilePath, (ret) => {
     if (!ret) {
@@ -66,10 +61,7 @@ router.get('/:reportId/:fileName/download', (req, res) => {
 });
 
 router.get('/:reportId/:fileName', (req, res) => {
-  const {
-    fileName,
-    reportId,
-  } = req.params;
+  const { fileName, reportId } = req.params;
   readTextFile(`${REPORT_PATH}${reportId}/${fileName}`, (err, content) => {
     if (err) {
       res.status(401).send({

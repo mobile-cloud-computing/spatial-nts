@@ -17,32 +17,26 @@ router.get('/', (req, res) => {
 });
 
 router.post('/online', (req, res) => {
-  const {
-    netInf,
-  } = req.body;
+  const { netInf } = req.body;
   startMMTOnline(netInf, (mmtStatus) => {
     if (mmtStatus.error) {
       res.status(401).send({
         error: mmtStatus.error,
       });
     } else {
-      console.log(mmtStatus);
       res.send(mmtStatus);
     }
   });
 });
 
 router.post('/offline', (req, res) => {
-  const {
-    fileName,
-  } = req.body;
+  const { fileName } = req.body;
   startMMTOffline(fileName, (mmtStatus) => {
     if (mmtStatus.error) {
       res.status(401).send({
         error: mmtStatus.error,
       });
     } else {
-      console.log(mmtStatus);
       res.send(mmtStatus);
     }
   });
@@ -70,7 +64,6 @@ router.post('/dataset', (req, res) => {
         error: mmtStatus.error,
       });
     } else {
-      console.log(mmtStatus);
       res.send(mmtStatus);
     }
   });

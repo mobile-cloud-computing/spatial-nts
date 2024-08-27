@@ -46,9 +46,7 @@ router.get('/stop', (req, res) => {
  * }
  */
 router.post('/', async (req, res) => {
-  const {
-    predictConfig,
-  } = req.body;
+  const { predictConfig } = req.body;
   if (!predictConfig) {
     res.status(401).send({
       error: 'Missing predicting configuration. Please read the docs',
@@ -69,7 +67,9 @@ router.get('/', (req, res) => {
 router.get('/interfaces', (req, res) => {
   const networkInterfaces = listNetworkInterfaces();
   const ipv4Addresses = Object.keys(networkInterfaces).reduce((addresses, interfaceName) => {
-    const ipv4Interface = networkInterfaces[interfaceName].find((interface) => interface.family === 'IPv4');
+    const ipv4Interface = networkInterfaces[interfaceName].find(
+      (interface) => interface.family === 'IPv4'
+    );
 
     if (ipv4Interface) {
       addresses.push(`${interfaceName} - ${ipv4Interface.address}`);
@@ -77,8 +77,6 @@ router.get('/interfaces', (req, res) => {
 
     return addresses;
   }, []);
-
-  console.log(ipv4Addresses);
 
   res.send({
     interfaces: ipv4Addresses,

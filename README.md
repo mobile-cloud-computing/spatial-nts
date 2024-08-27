@@ -85,7 +85,7 @@ yarn start
 To build a Docker image of Spatial, run:
 
 ```bash
-sudo docker-compose build .
+sudo docker-compose build
 ```
 
 ### Running the Docker Container

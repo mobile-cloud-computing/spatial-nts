@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const express = require('express');
 
 const router = express.Router();
@@ -46,18 +47,72 @@ function extractAccuracy(modelId) {
   });
 }
 
+/**
+ * @swagger
+ * /{modelId}/accuracy:
+ *   get:
+ *     summary: Get the accuracy of the specified model.
+ *     tags:
+ *       - Model Metrics
+ *     parameters:
+ *       - in: path
+ *         name: modelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the model.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved accuracy.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accuracy:
+ *                   type: string
+ *       400:
+ *         description: Accuracy not found or error occurred.
+ */
 router.get('/:modelId/accuracy', async (req, res, next) => {
   const { modelId } = req.params;
   try {
     const accuracy = await extractAccuracy(modelId);
-    console.log('Accuracy: ', accuracy);
     res.send({ accuracy });
   } catch (err) {
-    console.error(err);
     res.status(400).send({ error: err.message });
   }
 });
 
+/**
+ * @swagger
+ * /{modelId}/currentness:
+ *   get:
+ *     summary: Get the currentness of SHAP and LIME for the specified model.
+ *     tags:
+ *       - Model Metrics
+ *     parameters:
+ *       - in: path
+ *         name: modelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the model.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved currentness.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 currentness:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       500:
+ *         description: Server error occurred.
+ */
 router.get('/:modelId/currentness', async (req, res, next) => {
   const { modelId } = req.params;
   const files = [
@@ -72,34 +127,19 @@ router.get('/:modelId/currentness', async (req, res, next) => {
     const time_shap = data[1];
     const time_lime = data[2];
 
-    console.log('Time taken for predictions in seconds: ', time_predict);
-    console.log('Time taken for SHAP in seconds: ', time_shap);
-    console.log('Time taken for LIME in seconds: ', time_lime);
-
-    const shap_currentness = time_predict ? time_shap/time_predict : 0;
-    const lime_currentness = time_predict ? time_lime/time_predict : 0;
-
-    console.log("SHAP's currentness: " + shap_currentness);
-    console.log("LIME's currentness: " + lime_currentness);
-
-    const arr_currentness = [];
-    arr_currentness.push(`SHAP: ${shap_currentness}`);
-    arr_currentness.push(`LIME: ${lime_currentness}`);
+    const shap_currentness = time_predict ? time_shap / time_predict : 0;
+    const lime_currentness = time_predict ? time_lime / time_predict : 0;
 
     res.send({ 
-      currentness: arr_currentness 
+      currentness: [`SHAP: ${shap_currentness}`, `LIME: ${lime_currentness}`] 
     });
   } catch (err) {
-    console.error(err);
     res.status(500).send('Server Error');
   }  
 });
 
 router.get('/:typePoisoningAttack/:modelId/impact', (req, res, next) => {
-  const {
-    typePoisoningAttack,
-    modelId,
-  } = req.params;
+  const { typePoisoningAttack, modelId } = req.params;
   
   const poisonedDatasetPath = `${ATTACKS_PATH}${modelId.replace('.h5', '')}/${typePoisoningAttack}_poisoned_dataset.csv`;
   const testingSamplesFilePath = `${TRAINING_PATH}${modelId.replace('.h5', '')}/datasets/Test_samples.csv`;
@@ -112,11 +152,11 @@ router.get('/:typePoisoningAttack/:modelId/impact', (req, res, next) => {
       const buildConfig = fs.readFileSync(buildConfigPath);
       const buildObj = JSON.parse(buildConfig);
       const retrainConfig = {
-        "modelId": modelId, 
-        "trainingDataset": poisonedDatasetPath,
-        "testingDataset": testingSamplesFilePath,
-        "training_parameters": buildObj.training_parameters,
-      }
+        modelId, 
+        trainingDataset: poisonedDatasetPath,
+        testingDataset: testingSamplesFilePath,
+        training_parameters: buildObj.training_parameters,
+      };
       
       const retrainStatus = getRetrainStatus();
       if (retrainStatus.isRunning) {
@@ -124,39 +164,26 @@ router.get('/:typePoisoningAttack/:modelId/impact', (req, res, next) => {
           error: 'A building process is running. Only one process is allowed at the time. Please try again later',
         });
       } else {
-        var retrainId;
-        const promise = new Promise((extractAccuracy, reject) => {
+        const promise = new Promise((resolve, reject) => {
           retrainModel(retrainConfig, (results) => {
-            console.log(results.retrainId);            
-            retrainId = results.retrainId;
             if (results.error) {
-              res.status(401).send({
-                error: results.error,
-              });
+              reject(results.error);
             } else {
-              //resolve(results);
-              extractAccuracy(results);
-              //const processedResults = extractAccuracy(retrainId);
-              //console.log(processedResults);
-
-              
+              resolve(results);
             }
           });
         });
 
         promise.then((results) => {
-          const processedResults = extractAccuracy(results.retrainId);
-          console.log(processedResults);
-          res.json(processedResults);
+          return extractAccuracy(results.retrainId);
+        }).then((accuracy) => {
+          res.send({ accuracy });
         }).catch((err) => {
-          console.error(err);
           res.status(500).send('An error occurred');
         });
-        
-      }      
+      }
     }
   }); 
 });
-
 
 module.exports = router;
