@@ -1,4 +1,4 @@
-# spatial-backend
+# spatial-network-traffic service
 
 This is the Backend for spatial
 
@@ -13,7 +13,7 @@ This is the Backend for spatial
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/toluelemson/spatial-backend
+git clone https://github.com/mobile-cloud-computing/spatial-nts
 ```
 
 Create and activate environment Variable:
@@ -26,7 +26,7 @@ source spatial_env/bin/activate
 Change directory to the cloned repository:
 
 ```bash
-cd spartial-backend
+cd spatial-nts
 ```
 
 Checkout the feature branch:
@@ -107,4 +107,4 @@ We welcome contributions to this project. Please follow these steps:
 2. Create a new branch for your feature (`git checkout -b feature/Feature`).
 3. Make changes and commit them (`git commit -m 'Add some Feature'`).
 4. Push to the branch (`git push origin feature/Feature`).
-5. Open a Pull Request.# spatial-backend
+5. Open a Pull Request.#spatial-nts
