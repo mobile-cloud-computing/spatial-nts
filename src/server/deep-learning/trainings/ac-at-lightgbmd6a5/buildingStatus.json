@@ -1,0 +1,1 @@
+{"isRunning":true,"lastBuildAt":1723417203251,"config":{"modelId":"ac-lightgbm","modelType":"LightGBM","datasetsConfig":{"trainingDataset":"rsl_poisoned_dataset.csv","testingDataset":"Test_samples.csv"}},"lastRetrainId":"ac-at-lightgbmd6a5"}
