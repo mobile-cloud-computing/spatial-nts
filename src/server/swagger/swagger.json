@@ -3,7 +3,7 @@
   "info" : {
     "title" : "SPATIAL Platform",
     "description" : "The APIs provided by MAIP",
-    "termsOfService" : "https://github.com/..",
+    "termsOfService" : "http://github.com/..",
     "contact" : {
       "email" : ".."
     },
@@ -15,7 +15,7 @@
   },
   "externalDocs" : {
     "description" : "Find out more about Spatial open-source projects",
-    "url" : "https://github.com/.."
+    "url" : "http://github.com/.."
   },
   "servers": [
     {

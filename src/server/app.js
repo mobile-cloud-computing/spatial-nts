@@ -105,7 +105,7 @@ app.use(globalErrorHandler);
 // Start HTTP server
 const server = http.createServer(app);
 server.listen(app.get('port'), process.env.SERVER_HOST || 'localhost', () => {
-    console.log(`[SERVER] HTTP Server started on http://${process.env.SERVER_HOST || 'localhost'}:${app.get('port')}`);
+    console.log(`[SERVER] HTTP Server started on http://${'localhost'}:${app.get('port')}`);
 });
 
 module.exports = app;
