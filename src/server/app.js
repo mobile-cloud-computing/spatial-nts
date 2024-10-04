@@ -50,7 +50,7 @@ const limiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 100 requests per hour
     message: 'Too many requests from this IP, please try again in an hour!'
 });
-app.use('/api', limiter);
+app.use('/api/nts', limiter);
 
 // Routers
 const acRouter = require('./routes/ac');
