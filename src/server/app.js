@@ -67,19 +67,19 @@ const xaiRouter = require('./routes/xai_old');
 const attacksRouter = require('./routes/attacks');
 const metricsRouter = require('./routes/metrics');
 
-app.use('/api/ac', acRouter);
-app.use('/api/mmt', mmtRouter);
-app.use('/api/pcaps', pcapRouter);
-app.use('/api/reports', reportRouter);
-app.use('/api/logs', logRouter);
-app.use('/api/models', modelRouter);
-app.use('/api/build', buildRouter);
-app.use('/api/retrain', retrainRouter);
-app.use('/api/predictions', predictionRouter);
-app.use('/api/predict', predictRouter);
-app.use('/api/xai', xaiRouter);
-app.use('/api/attacks', attacksRouter);
-app.use('/api/metrics', metricsRouter);
+app.use('/api/nts/ac', acRouter);
+app.use('/api/nts/mmt', mmtRouter);
+app.use('/api/nts/pcaps', pcapRouter);
+app.use('/api/nts/reports', reportRouter);
+app.use('/api/nts/logs', logRouter);
+app.use('/api/nts/models', modelRouter);
+app.use('/api/nts/build', buildRouter);
+app.use('/api/nts/retrain', retrainRouter);
+app.use('/api/nts/predictions', predictionRouter);
+app.use('/api/nts/predict', predictRouter);
+app.use('/api/nts/xai', xaiRouter);
+app.use('/api/nts/attacks', attacksRouter);
+app.use('/api/nts/metrics', metricsRouter);
 
 // Handle root route based on mode
 if (process.env.MODE === 'API') {
